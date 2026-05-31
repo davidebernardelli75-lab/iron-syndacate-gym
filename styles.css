@@ -1,0 +1,102 @@
+:root {
+  --ink: #0d0c0a;
+  --surface: #141210;
+  --surface-2: #1c1915;
+  --surface-3: #26221b;
+  --line: #322b22;
+  --line-2: #40362a;
+  --text: #efe7d8;
+  --dim: #a89c89;
+  --faint: #6e6557;
+  --fire: #ee5a1c;
+  --amber: #f5a623;
+  --hot: #ffc23d;
+  --ember: #c2351a;
+  --ok: #5fae57;
+  --warn: #f5a623;
+  --bad: #e0533a;
+  --info: #5b9bd5;
+  --font-display: 'Anton', 'Oswald', sans-serif;
+  --font-cond: 'Oswald', sans-serif;
+  --font-body: 'Barlow', system-ui, sans-serif;
+  --fire-grad: linear-gradient(135deg, var(--hot) 0%, var(--amber) 35%, var(--fire) 75%, var(--ember) 100%);
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0; height: 100%;
+  background: var(--ink);
+  color: var(--text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+#root { height: 100%; }
+
+/* ---- stage background (industrial concrete + ember glow) ---- */
+.stage-bg {
+  position: fixed; inset: 0; z-index: 0;
+  background:
+    radial-gradient(1200px 700px at 18% -10%, rgba(238,90,28,0.16), transparent 60%),
+    radial-gradient(1000px 800px at 100% 120%, rgba(245,166,35,0.10), transparent 55%),
+    var(--ink);
+}
+.stage-bg::after {
+  content: ''; position: absolute; inset: 0;
+  background-image:
+    repeating-linear-gradient(115deg, rgba(255,255,255,0.014) 0 2px, transparent 2px 7px),
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.25) 0 1px, transparent 1px 64px);
+  opacity: 0.6; mix-blend-mode: overlay;
+}
+
+/* ---- typography helpers ---- */
+.display { font-family: var(--font-display); font-weight: 400; letter-spacing: 0.01em; line-height: 0.92; text-transform: uppercase; }
+.cond { font-family: var(--font-cond); }
+.kicker {
+  font-family: var(--font-cond); font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.28em; font-size: 11px; color: var(--fire);
+}
+body.stencil .display { font-family: 'Black Ops One', var(--font-display); letter-spacing: 0.005em; line-height: 1.0; }
+
+/* fire text */
+.fire-text {
+  background: var(--fire-grad);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+
+/* scrollbars */
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--faint); }
+.noscroll::-webkit-scrollbar { display: none; }
+.noscroll { scrollbar-width: none; }
+
+/* image placeholder (striped) */
+.ph {
+  position: relative; overflow: hidden;
+  background:
+    repeating-linear-gradient(135deg, rgba(245,166,35,0.05) 0 10px, rgba(238,90,28,0.04) 10px 20px),
+    var(--surface-2);
+  border: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: center;
+}
+.ph .ph-label {
+  font-family: 'Barlow', monospace; font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--faint); padding: 4px 8px;
+  border: 1px dashed var(--line-2); border-radius: 4px; background: rgba(0,0,0,0.3);
+  text-align: center;
+}
+
+button { font-family: inherit; cursor: pointer; }
+.focus-reset:focus { outline: none; }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes pulseDot { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+/* phone column wrapper for the client app on desktop */
+.app-stage { height: 100%; display: flex; align-items: stretch; justify-content: center; background: #050505; }
+.app-phone { width: 100%; max-width: 440px; height: 100%; position: relative; overflow: hidden; background: var(--ink); }
+@media (min-width: 480px) {
+  .app-stage { padding: 0; }
+}
