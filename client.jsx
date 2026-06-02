@@ -16,8 +16,14 @@ function Toggle({ on, onChange }) {
 
 // ════════════════════════════════ LOGIN ══════════════════════
 function LoginScreen({ onSuccess, goRegister, siteHref }) {
+<<<<<<< HEAD
   const [email, setEmail] = React.useState('marco.bellini@email.it');
   const [pwd, setPwd] = React.useState('demo1234');
+=======
+  const demo = !(typeof window !== 'undefined' && window.ISG_DEMO === false);
+  const [email, setEmail] = React.useState(demo ? 'marco.bellini@email.it' : '');
+  const [pwd, setPwd] = React.useState(demo ? 'demo1234' : '');
+>>>>>>> eedc449bd446be50e4e53dd9dcf87dcfb9a81cf6
   const [err, setErr] = React.useState('');
   const submit = () => {
     const r = (typeof AUTH !== 'undefined') ? AUTH.clientLogin(email, pwd) : { ok: true };
