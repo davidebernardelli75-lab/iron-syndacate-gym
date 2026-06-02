@@ -19,10 +19,14 @@ function LoginScreen({ onSuccess, goRegister, siteHref }) {
 const [email, setEmail] = React.useState('');
   const [pwd, setPwd] = React.useState(''); eedc449bd446be50e4e53dd9dcf87dcfb9a81cf6
   const [err, setErr] = React.useState('');
-  const submit = () => {
-    const r = (typeof AUTH !== 'undefined') ? AUTH.clientLogin(email, pwd) : { ok: true };
-    if (r.ok) onSuccess(AUTH.currentClient ? AUTH.currentClient() : ME);
-    else setErr(r.err || 'Accesso non riuscito');
+  const submit = async () => {
+    const r = await AUTH.clientLogin(email, pwd);
+    if (r.ok) {
+      const me = await AUTH.currentClient();
+      onSuccess(me);
+    } else {
+      setErr(r.err || 'Accesso non riuscito');
+    }
   };
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--ink)', position: 'relative', overflow: 'hidden' }}>
