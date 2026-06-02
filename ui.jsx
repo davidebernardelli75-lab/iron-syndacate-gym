@@ -210,8 +210,7 @@ function Sparkline({ data, accessor = 'v', width = 240, height = 56 }) {
 
 // ---- Avatar (monogram) ----
 function Avatar({ name, size = 38, sex }) {
-  const initials = (name || 'Atleta').split(' ').map(w => w[0]).slice(0, 2).join('');{ name, size = 38, sex }) {
-  const initials = name.split(' ').map(w => w[0]).slice(0, 2).join('');
+  const initials = (name || 'Atleta').split(' ').map(w => w[0]).slice(0, 2).join('');
   return (
     <div style={{
       width: size, height: size, borderRadius: 10, flexShrink: 0,
