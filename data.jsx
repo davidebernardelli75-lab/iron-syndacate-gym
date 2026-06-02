@@ -13,4 +13,14 @@ const ACCESS_SERIES=[];
 const TODAY_BOOKINGS=[];
 const TODO_ITEMS=[];
 const RECENT_ACCESS=[];
-Object.assign(window,{QUOTES,quoteOfTheDay,SERVICES,PLANS,PT_PACKS,EVENTS,VENDING,STATUS,CLIENTS,KPI,REVENUE_SERIES,ACCESS_SERIES,TODAY_BOOKINGS,TODO_ITEMS,RECENT_ACCESS});
+Object.assign(window,{QUOTES,quoteOfTheDay,SERVICES,PLANS,PT_PACKS,EVENTS,VENDING,STATUS,CLIENTS,KPI,REVENUE_SERIES,ACCESS_SERIES,TODAY_BOOKINGS,TODO_ITEMS,RECENT_ACCESS});const DB={
+  async getEvents(){return[];},
+  async getVending(){return[];},
+  async getClients(){return[];},
+  async getKPI(){return KPI;},
+  async getTodayBookings(){return[];},
+  async getTodoItems(){return[];},
+  async getRecentAccess(){return[];},
+  async getRevenueSeries(){return[];}
+};
+window.DB=DB;
