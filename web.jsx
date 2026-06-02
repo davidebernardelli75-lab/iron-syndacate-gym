@@ -261,7 +261,11 @@ function WebPlans({ toast }) {
 
 // ---------- EVENTS ----------
 function WebEvents({ toast }) {
-  const sorted = EVENTS.slice().sort((a, b) => a.date.localeCompare(b.date)).slice(0, 4);
+  const [events, setEvents] = React.useState([]);
+  React.useEffect(() => {
+    DB.getEvents().then(data => setEvents(data));
+  }, []);
+  const sorted = events.slice().sort((a, b) => (a.date||'').localeCompare(b.date||'')).slice(0, 4);
   return (
     <div style={{ padding: 'clamp(52px, 8vw, 80px) 0', background: 'linear-gradient(180deg, var(--surface), var(--ink))', borderTop: '1px solid var(--line)' }}>
       <Wrap>
@@ -304,6 +308,10 @@ function WebEvents({ toast }) {
 
 // ---------- VENDING ----------
 function WebVending() {
+  const [vending, setVending] = React.useState([]);
+  React.useEffect(() => {
+    DB.getVending().then(data => setVending(data));
+  }, []);
   return (
     <div style={{ padding: 'clamp(52px, 8vw, 80px) 0' }}>
       <Wrap>
