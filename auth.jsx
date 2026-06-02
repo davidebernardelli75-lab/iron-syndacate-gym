@@ -9,7 +9,31 @@ const AUTH={
   async adminLogout(){const sb=await getSB();await sb.auth.signOut();localStorage.removeItem('isg_admin_session');},
   async addClient(c){const sb=await getSB();const{error}=await sb.auth.signUp({email:c.email,password:c.password});if(error)return{ok:false,err:error.message};return{ok:true};},
   async clientLogin(email,pwd){const sb=await getSB();const{data,error}=await sb.auth.signInWithPassword({email:email.trim(),password:pwd});if(error)return{ok:false,err:'Credenziali non valide'};localStorage.setItem('isg_client_session',data.user.email);return{ok:true};},
-  async currentClient(){const sb=await getSB();const{data}=await sb.auth.getUser();if(!data.user)return null;const email=data.user.email;const name=email.split('@')[0];return{email,name,first:name,nick:name,id:'ISG-2026-0001',plan:'Nessun abbonamento',planPeriod:'—',expiry:'—',expiryDays:0,cert:'missing',certExp:'—',certDays:0,credit:0,access:0,consents:{chat:false,privacy:true,marketing:false,data:true},isNew:true};},
+  async currentClient(){
+  const sb=await getSB();
+  const{data}=await sb.auth.getUser();
+  if(!data.user)return null;
+  const email=data.user.email||'';
+  const namePart=email.split('@')[0]||'Atleta';
+  return{
+    email,
+    name: namePart,
+    first: namePart,
+    nick: namePart,
+    id: 'ISG-2026-0001',
+    plan: 'Nessun abbonamento',
+    planPeriod: '—',
+    expiry: '—',
+    expiryDays: 0,
+    cert: 'missing',
+    certExp: '—',
+    certDays: 0,
+    credit: 0,
+    access: 0,
+    consents:{chat:false,privacy:true,marketing:false,data:true},
+    isNew: true,
+  };
+},{const sb=await getSB();const{data}=await sb.auth.getUser();if(!data.user)return null;const email=data.user.email;const name=email.split('@')[0];return{email,name,first:name,nick:name,id:'ISG-2026-0001',plan:'Nessun abbonamento',planPeriod:'—',expiry:'—',expiryDays:0,cert:'missing',certExp:'—',certDays:0,credit:0,access:0,consents:{chat:false,privacy:true,marketing:false,data:true},isNew:true};},
   async clientLogout(){const sb=await getSB();await sb.auth.signOut();localStorage.removeItem('isg_client_session');}
 };
 window.AUTH=AUTH;
