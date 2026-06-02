@@ -179,7 +179,7 @@ function ClientDashboard({ me, go, toast }) {
         <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <div className="kicker" style={{ marginBottom: 6 }}>{new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
-            <h1 className="display" style={{ margin: 0, fontSize: 32, color: 'var(--text)', lineHeight: 0.92 }}>CIAO,<br /><span className="fire-text">{me.first.toUpperCase()}</span></h1>
+            <h1 className="display" style={{ margin: 0, fontSize: 32, color: 'var(--text)', lineHeight: 0.92 }}>CIAO,<br /><span className="fire-text">{(me.first || me.name || 'Atleta').toUpperCase()}</span></h1>
           </div>
           <button onClick={() => go('profile', 'notifs')} style={{ background: 'rgba(13,12,10,0.5)', border: '1px solid var(--line)', borderRadius: 999, padding: 9, position: 'relative', marginTop: 4 }}>
             <Icon name="bell" size={20} color="var(--text)" stroke={1.9} />
