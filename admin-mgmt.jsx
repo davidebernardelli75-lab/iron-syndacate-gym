@@ -12,13 +12,25 @@ const docStatusMap = {
 // ══════════════════════════════════════ DOCUMENTI ════════════
 function DocsSection({ toast }) {
   const [docs, setDocs] = React.useState(DOCS_QUEUE);
-  const [selId, setSelId] = React.useState(DOCS_QUEUE[0].id);
-  const sel = docs.find(d => d.id === selId) || docs[0];
+  const [selId, setSelId] = React.useState(DOCS_QUEUE.length > 0 ? DOCS_QUEUE[0].id : null);
+  const sel = docs.find(d => d.id === selId) || docs[0] || null;
 
   const act = (status, msg) => {
     setDocs(ds => ds.map(d => d.id === selId ? { ...d, status } : d));
     toast(msg);
   };
+
+  if (docs.length === 0) return (
+    <div style={{ padding: 24, animation: 'fadeUp .3s ease' }}>
+      <Panel pad={40} style={{ textAlign: 'center' }}>
+        <span style={{ width: 56, height: 56, borderRadius: 14, background: 'rgba(95,174,87,0.1)', border: '1px solid var(--line-2)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+          <Icon name="check" size={26} color="var(--ok)" stroke={2.5} />
+        </span>
+        <h2 className="display" style={{ margin: '0 0 8px', fontSize: 22, color: 'var(--text)' }}>Nessun documento da validare</h2>
+        <p style={{ color: 'var(--dim)', fontSize: 14, maxWidth: 340, margin: '0 auto', lineHeight: 1.5 }}>La coda è vuota. I documenti caricati dai clienti appariranno qui.</p>
+      </Panel>
+    </div>
+  );
 
   return (
     <div style={{ padding: 24, animation: 'fadeUp .3s ease' }}>
@@ -176,11 +188,11 @@ function miniGhost() {
 // ══════════════════════════════════════ CHAT ════════════════
 function ChatSection({ toast }) {
   const [mode, setMode] = React.useState('community');
-  const [chan, setChan] = React.useState('all');
-  const [dm, setDm] = React.useState(DM_THREADS[0].id);
+  const [chan, setChan] = React.useState(CHAT_CHANNELS.length > 0 ? CHAT_CHANNELS[0].id : 'all');
+  const [dm, setDm] = React.useState(DM_THREADS.length > 0 ? DM_THREADS[0].id : null);
   const mobile = useIsMobile(820);
   const msgs = CHAT_MESSAGES[chan] || [];
-  const thread = DM_THREADS.find(t => t.id === dm);
+  const thread = DM_THREADS.find(t => t.id === dm) || null;
 
   return (
     <div style={{ padding: 24, animation: 'fadeUp .3s ease' }}>
@@ -304,6 +316,9 @@ function ChatSection({ toast }) {
             <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--line)' }}>
               <span className="cond" style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', textTransform: 'uppercase' }}>Conversazioni</span>
             </div>
+            {DM_THREADS.length === 0 && (
+              <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--faint)', fontFamily: 'var(--font-cond)', fontSize: 13 }}>Nessuna chat privata</div>
+            )}
             {DM_THREADS.map(t => {
               const on = dm === t.id;
               return (
@@ -327,6 +342,14 @@ function ChatSection({ toast }) {
 
           {/* dm conversation */}
           <Panel pad={0} style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: mobile ? 440 : undefined }}>
+            {!thread ? (
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 32, textAlign: 'center' }}>
+                <div>
+                  <Icon name="chat" size={40} color="var(--line-2)" stroke={1.4} />
+                  <div className="cond" style={{ fontSize: 13, color: 'var(--faint)', marginTop: 12 }}>Seleziona una conversazione</div>
+                </div>
+              </div>
+            ) : (<>
             <div style={{ padding: '13px 18px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 12 }}>
               <Avatar name={thread.client} size={40} />
               <div style={{ flex: 1 }}>
@@ -357,6 +380,7 @@ function ChatSection({ toast }) {
               <input placeholder={`Rispondi a ${thread.client}…`} style={{ flex: 1, background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 10, padding: '10px 14px', color: 'var(--text)', fontFamily: 'var(--font-body)', fontSize: 13, outline: 'none' }} />
               <FireButton size="sm" icon="arrow" onClick={() => toast('Risposta inviata')}>Invia</FireButton>
             </div>
+            </>)}
           </Panel>
         </div>
       )}

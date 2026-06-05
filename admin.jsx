@@ -533,7 +533,7 @@ function NewClientModal({ onClose, toast }) {
   const [ok, setOk] = React.useState(null);
   const [err, setErr] = React.useState('');
   const set = (k) => (e) => { setF(s => ({ ...s, [k]: e.target.value })); setErr(''); };
-  const create = () => {
+  const create = async () => {
     if (!f.first.trim() || !f.last.trim()) return setErr('Nome e cognome obbligatori');
     if (!/.+@.+\..+/.test(f.email)) return setErr('Email non valida');
     if (!f.nick.trim()) return setErr('Nickname obbligatorio');
@@ -544,7 +544,7 @@ function NewClientModal({ onClose, toast }) {
       id: 'ISG-2026-' + String(Math.floor(1000 + Math.random() * 8999)),
       consents: { chat: false, privacy: true, marketing: false, data: true },
     };
-    const r = (typeof AUTH !== 'undefined') ? AUTH.addClient(client) : { ok: true };
+    const r = (typeof AUTH !== 'undefined') ? await AUTH.addClient(client) : { ok: true };
     if (!r.ok) return setErr(r.err || 'Creazione non riuscita');
     setOk({ email: client.email, pwd });
     toast('Account cliente creato · ' + client.name);
@@ -615,8 +615,12 @@ function AdminLogin({ onSuccess, siteHref, onExit }) {
   const [email, setEmail] = React.useState(cur.email);
   const [pwd, setPwd] = React.useState('');
   const [err, setErr] = React.useState('');
-  const submit = () => {
-    if (AUTH.adminLogin(email, pwd)) onSuccess();
+  const [loading, setLoading] = React.useState(false);
+  const submit = async () => {
+    setLoading(true); setErr('');
+    const ok = await AUTH.adminLogin(email, pwd);
+    setLoading(false);
+    if (ok) onSuccess();
     else setErr('Credenziali non valide. Riprova.');
   };
   const exit = () => { if (siteHref) window.location.href = siteHref; else if (onExit) onExit(); };
@@ -645,7 +649,7 @@ function AdminLogin({ onSuccess, siteHref, onExit }) {
               <span style={{ fontSize: 12.5, color: 'var(--bad)', fontFamily: 'var(--font-cond)', fontWeight: 600 }}>{err}</span>
             </div>
           )}
-          <div style={{ marginTop: 6 }}><FireButton size="lg" full icon="logout" onClick={submit}>Entra</FireButton></div>
+          <div style={{ marginTop: 6 }}><FireButton size="lg" full icon="logout" onClick={submit}>{loading ? 'Accesso…' : 'Entra'}</FireButton></div>
         </div>
         <div style={{ marginTop: 16, padding: '11px 13px', borderRadius: 10, background: 'var(--surface)', border: '1px dashed var(--line-2)' }}>
           <div style={{ fontSize: 10.5, color: 'var(--faint)', fontFamily: 'var(--font-cond)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Credenziali demo</div>
@@ -664,10 +668,22 @@ const admInput = { width: '100%', background: 'var(--surface)', border: '1px sol
 
 // ---------- ADMIN APP (gate + panel) ----------
 function AdminApp({ siteHref, onExit, appHref, onApp }) {
-  const [authed, setAuthed] = React.useState(AUTH.isAdmin());
+  const [authed, setAuthed] = React.useState(false);
+  const [checking, setChecking] = React.useState(true);
+  React.useEffect(() => {
+    AUTH.isAdmin().then(v => { setAuthed(v); setChecking(false); });
+  }, []);
+  if (checking) return (
+    <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--ink)' }}>
+      <div style={{ textAlign: 'center' }}>
+        <img src="assets/logo-badge.png" alt="" style={{ width: 56, opacity: 0.5, marginBottom: 16 }} />
+        <div className="cond" style={{ color: 'var(--faint)', fontSize: 13 }}>Verifica sessione…</div>
+      </div>
+    </div>
+  );
   if (!authed) return <AdminLogin onSuccess={() => setAuthed(true)} siteHref={siteHref} onExit={onExit} />;
   return <AdminPanel siteHref={siteHref} onExit={onExit} appHref={appHref} onApp={onApp}
-    onLogout={() => { AUTH.adminLogout(); setAuthed(false); }} />;
+    onLogout={async () => { await AUTH.adminLogout(); setAuthed(false); }} />;
 }
 
 Object.assign(window, { AdminPanel, AdminApp });

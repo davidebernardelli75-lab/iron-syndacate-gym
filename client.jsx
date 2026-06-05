@@ -17,7 +17,7 @@ function Toggle({ on, onChange }) {
 // ════════════════════════════════ LOGIN ══════════════════════
 function LoginScreen({ onSuccess, goRegister, siteHref }) {
 const [email, setEmail] = React.useState('');
-  const [pwd, setPwd] = React.useState(''); eedc449bd446be50e4e53dd9dcf87dcfb9a81cf6
+  const [pwd, setPwd] = React.useState('');
   const [err, setErr] = React.useState('');
   const submit = async () => {
     const r = await AUTH.clientLogin(email, pwd);
@@ -92,7 +92,7 @@ function RegisterScreen({ onSuccess, goLogin, siteHref }) {
   const [consent, setConsent] = React.useState(false);
   const [err, setErr] = React.useState('');
   const set = (k) => (e) => { setF(s => ({ ...s, [k]: e.target.value })); setErr(''); };
-  const submit = () => {
+  const submit = async () => {
     if (!f.first.trim() || !f.last.trim()) return setErr('Inserisci nome e cognome');
     if (!f.email.trim() || !/.+@.+\..+/.test(f.email)) return setErr('Email non valida');
     if (!f.nick.trim()) return setErr('Scegli un nickname');
@@ -105,10 +105,11 @@ function RegisterScreen({ onSuccess, goLogin, siteHref }) {
       id: 'ISG-2026-' + String(Math.floor(1000 + Math.random() * 8999)),
       consents: { chat: false, privacy: true, marketing: false, data: true },
     };
-    const r = (typeof AUTH !== 'undefined') ? AUTH.addClient(client) : { ok: true };
+    const r = (typeof AUTH !== 'undefined') ? await AUTH.addClient(client) : { ok: true };
     if (!r.ok) return setErr(r.err || 'Registrazione non riuscita');
-    AUTH.clientLogin(f.email.trim(), f.pwd);
-    onSuccess(AUTH.currentClient());
+    await AUTH.clientLogin(f.email.trim(), f.pwd);
+    const me = await AUTH.currentClient();
+    onSuccess(me);
   };
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--ink)', position: 'relative', overflowY: 'auto' }} className="noscroll">

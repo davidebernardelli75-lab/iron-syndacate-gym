@@ -162,7 +162,7 @@ function PlanCard({ plan, onSelect, compact }) {
 
 // ---------- HOME ----------
 function HomeScreen({ go, toast }) {
-  const next = EVENTS.slice().sort((a, b) => a.date.localeCompare(b.date))[0];
+  const next = EVENTS.slice().sort((a, b) => a.date.localeCompare(b.date))[0] || null;
   return (
     <div style={{ animation: 'fadeUp .3s ease' }}>
       <MobileHero onPlans={() => go('plans')} onTrial={() => toast('Richiesta prova inviata — ti contattiamo a breve')} />
@@ -179,6 +179,7 @@ function HomeScreen({ go, toast }) {
             {PLANS.slice(1, 3).map(p => <PlanCard key={p.id} plan={p} compact onSelect={() => go('plans')} />)}
           </div>
         </div>
+        {next && (
         <div>
           <SectionTitle kicker="In programma" title="Prossimo evento" action="Calendario" onAction={() => go('events')} />
           <Panel pad={0} style={{ overflow: 'hidden' }}>
@@ -198,6 +199,7 @@ function HomeScreen({ go, toast }) {
             </div>
           </Panel>
         </div>
+        )}
         <VendingTeaser go={go} />
         <ContactBlock toast={toast} />
       </div>
@@ -505,8 +507,16 @@ function MobileHeader({ tab, psub, onBack, onBell }) {
 
 // ---------- MOBILE APP ----------
 function MobileApp({ siteHref }) {
-  const [me, setMe] = React.useState(() => (typeof AUTH !== 'undefined' ? AUTH.currentClient() : null));
+  const [me, setMe] = React.useState(null);
+  const [authChecked, setAuthChecked] = React.useState(false);
   const [authMode, setAuthMode] = React.useState('login');
+  React.useEffect(() => {
+    if (typeof AUTH !== 'undefined') {
+      AUTH.currentClient().then(u => { setMe(u); setAuthChecked(true); });
+    } else {
+      setAuthChecked(true);
+    }
+  }, []);
   const [tab, setTab] = React.useState('home');
   const [psub, setPsub] = React.useState(null);
   const [toastMsg, setToastMsg] = React.useState('');
@@ -515,13 +525,24 @@ function MobileApp({ siteHref }) {
   const go = (t, sub = null) => { setTab(t); setPsub(t === 'profile' ? sub : null); };
   React.useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = 0; }, [tab, psub]);
 
+  if (!authChecked) {
+    return (
+      <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--ink)' }}>
+        <div style={{ textAlign: 'center' }}>
+          <img src="assets/logo-badge.png" alt="" style={{ width: 72, opacity: 0.4, marginBottom: 14 }} />
+          <div className="cond" style={{ color: 'var(--faint)', fontSize: 12 }}>Caricamento…</div>
+        </div>
+      </div>
+    );
+  }
+
   if (!me) {
     return authMode === 'register'
       ? <RegisterScreen onSuccess={(m) => { setMe(m); go('home'); }} goLogin={() => setAuthMode('login')} siteHref={siteHref} />
       : <LoginScreen onSuccess={(m) => { setMe(m); go('home'); }} goRegister={() => setAuthMode('register')} siteHref={siteHref} />;
   }
 
-  const logout = () => { if (typeof AUTH !== 'undefined') AUTH.clientLogout(); setMe(null); setAuthMode('login'); go('home'); };
+  const logout = async () => { if (typeof AUTH !== 'undefined') await AUTH.clientLogout(); setMe(null); setAuthMode('login'); go('home'); };
 
   const fullBleed = tab === 'profile' && psub === 'chat';
   return (

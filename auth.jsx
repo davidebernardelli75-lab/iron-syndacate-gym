@@ -4,6 +4,11 @@ if(!window.supabase){const s=document.createElement('script');s.src='https://cdn
 function getSB(){return new Promise(resolve=>{if(window._sb)return resolve(window._sb);const iv=setInterval(()=>{if(window._sb){clearInterval(iv);resolve(window._sb);}},50);});}
 const AUTH={
   ADMIN_DEFAULT:{email:'admin@ironsyndacate.gym',password:'iron2026'},
+  getAdminCreds(){
+    try{const s=localStorage.getItem('isg_admin_creds');if(s)return JSON.parse(s);}catch(e){}
+    return{email:AUTH.ADMIN_DEFAULT.email,password:AUTH.ADMIN_DEFAULT.password};
+  },
+  setAdminCreds(creds){try{localStorage.setItem('isg_admin_creds',JSON.stringify(creds));}catch(e){}},
   async adminLogin(email,pwd){const sb=await getSB();const{data,error}=await sb.auth.signInWithPassword({email,password:pwd});if(error)return false;localStorage.setItem('isg_admin_session','1');return true;},
   async isAdmin(){const sb=await getSB();const{data}=await sb.auth.getUser();return!!data.user;},
   async adminLogout(){const sb=await getSB();await sb.auth.signOut();localStorage.removeItem('isg_admin_session');},
