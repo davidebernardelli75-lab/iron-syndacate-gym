@@ -13,11 +13,64 @@ const ACCESS_SERIES=[];
 const TODAY_BOOKINGS=[];
 const TODO_ITEMS=[];
 const RECENT_ACCESS=[];
-Object.assign(window,{QUOTES,quoteOfTheDay,SERVICES,PLANS,PT_PACKS,EVENTS,VENDING,STATUS,CLIENTS,KPI,REVENUE_SERIES,ACCESS_SERIES,TODAY_BOOKINGS,TODO_ITEMS,RECENT_ACCESS});const DB={
+Object.assign(window,{QUOTES,quoteOfTheDay,SERVICES,PLANS,PT_PACKS,EVENTS,VENDING,STATUS,CLIENTS,KPI,REVENUE_SERIES,ACCESS_SERIES,TODAY_BOOKINGS,TODO_ITEMS,RECENT_ACCESS});
+const DB={
   async getEvents(){return[];},
   async getVending(){return[];},
-  async getClients(){return[];},
-  async getKPI(){return KPI;},
+  async getClients(){
+    try{
+      const sb=await getSB();
+      const{data,error}=await sb.from('profiles')
+        .select('*, memberships(*, subscription_plans(*)), medical_certificates(*)')
+        .eq('ruolo','cliente')
+        .order('created_at',{ascending:false});
+      if(error||!data)return[];
+      const now=new Date();
+      return data.map(p=>{
+        const mem=(p.memberships||[])[0]||null;
+        const cert=(p.medical_certificates||[])[0]||null;
+        let expiry='—',status='active',plan='—';
+        if(mem){
+          expiry=mem.data_fine||mem.end_date||'—';
+          status=mem.stato||mem.status||'active';
+          if(expiry!=='—'&&status==='active'){const d=new Date(expiry);if(Math.ceil((d-now)/86400000)<=30)status='expiring';}
+          const sp=Array.isArray(mem.subscription_plans)?mem.subscription_plans[0]:mem.subscription_plans;
+          plan=sp?(sp.nome||sp.name||'Abbonamento'):'Abbonamento';
+        }
+        let certStatus='missing',certExp='—';
+        if(cert){certStatus=cert.stato||cert.status||'missing';certExp=cert.data_scadenza||cert.expiry_date||'—';}
+        const name=[(p.nome||p.first_name||''),(p.cognome||p.last_name||'')].filter(Boolean).join(' ')||(p.email||'').split('@')[0]||'Atleta';
+        return{
+          id:p.id,email:p.email||'',
+          name,nick:p.nickname||name,
+          plan,expiry,status,
+          cert:certStatus,certExp,
+          credit:Number(p.credito_distributori||p.credit||0),
+          access:Number(p.accessi_totali||p.total_access||0),
+          lastAccess:p.ultimo_accesso||p.last_access||'—',
+        };
+      });
+    }catch(e){console.warn('getClients failed',e);return[];}
+  },
+  async getKPI(){
+    try{
+      const sb=await getSB();
+      const today=new Date().toISOString().slice(0,10);
+      const in30=new Date(Date.now()+30*86400000).toISOString().slice(0,10);
+      const[r1,r2,r3,r4]=await Promise.all([
+        sb.from('profiles').select('*',{count:'exact',head:true}).eq('ruolo','cliente'),
+        sb.from('memberships').select('*',{count:'exact',head:true}).gte('data_fine',today).lte('data_fine',in30),
+        sb.from('profiles').select('*',{count:'exact',head:true}).eq('ruolo','cliente').in('stato',['cert_missing','cert_expired']),
+        sb.from('documents').select('*',{count:'exact',head:true}).eq('stato','da_validare'),
+      ]);
+      return{...KPI,
+        activeMembers:r1.count||0,
+        expiringSubs:r2.count||0,
+        certMissing:r3.count||0,
+        docsToReview:r4.count||0,
+      };
+    }catch(e){console.warn('getKPI failed',e);return KPI;}
+  },
   async getTodayBookings(){return[];},
   async getTodoItems(){return[];},
   async getRecentAccess(){return[];},

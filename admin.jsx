@@ -162,15 +162,19 @@ function StatCard({ icon, label, value, unit, delta, tone = 'fire', onClick }) {
 
 // ---------- DASHBOARD ----------
 function DashboardSection({ toast, goClients }) {
+  const [kpi, setKpi] = React.useState(KPI);
+  React.useEffect(() => {
+    if (typeof DB !== 'undefined') DB.getKPI().then(k => { if (k) setKpi(k); });
+  }, []);
   return (
     <div style={{ padding: 24, animation: 'fadeUp .3s ease' }}>
       {/* KPI grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 14, marginBottom: 18 }}>
-        <StatCard icon="users" label="Clienti attivi" value={KPI.activeMembers} delta="+12" tone="ok" onClick={goClients} />
-        <StatCard icon="plus" label="Nuovi iscritti · mese" value={KPI.newSignups} delta="+5" tone="fire" />
-        <StatCard icon="clock" label="Abbonam. in scadenza" value={KPI.expiringSubs} tone="warn" onClick={goClients} />
+        <StatCard icon="users" label="Clienti attivi" value={kpi.activeMembers} tone="ok" onClick={goClients} />
+        <StatCard icon="plus" label="Nuovi iscritti · mese" value={kpi.newSignups} tone="fire" />
+        <StatCard icon="clock" label="Abbonam. in scadenza" value={kpi.expiringSubs} tone="warn" onClick={goClients} />
         <StatCard icon="euro" label="Entrate · mese" value="18,4" unit="k€" delta="+9%" tone="ok" />
-        <StatCard icon="qr" label="Accessi oggi" value={KPI.accessToday} tone="info" />
+        <StatCard icon="qr" label="Accessi oggi" value={kpi.accessToday} tone="info" />
         <StatCard icon="bolt" label="Distributori · mese" value="1,28" unit="k€" delta="+6%" tone="fire" />
       </div>
 
@@ -279,8 +283,16 @@ function ClientsSection({ toast }) {
   const [q, setQ] = React.useState('');
   const [sel, setSel] = React.useState(null);
   const [showNew, setShowNew] = React.useState(false);
+  const [clients, setClients] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
 
-  const filtered = CLIENTS.filter(c => {
+  React.useEffect(() => {
+    if (typeof DB !== 'undefined') {
+      DB.getClients().then(list => { setClients(list || []); setLoading(false); });
+    } else { setLoading(false); }
+  }, []);
+
+  const filtered = clients.filter(c => {
     if (q && !(c.name.toLowerCase().includes(q.toLowerCase()) || c.nick.toLowerCase().includes(q.toLowerCase()))) return false;
     if (filter === 'all') return true;
     if (filter === 'active') return c.status === 'active';
@@ -320,7 +332,12 @@ function ClientsSection({ toast }) {
           ))}
         </div>
         <div>
-          {filtered.map((c, idx) => (
+          {loading && (
+            <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--faint)' }}>
+              <div className="cond" style={{ fontSize: 13 }}>Caricamento clienti…</div>
+            </div>
+          )}
+          {!loading && filtered.map((c, idx) => (
             <div key={c.id} onClick={() => setSel(c)} style={{
               display: 'grid', gridTemplateColumns: '1.7fr 1.1fr 1.2fr 1fr 1.1fr 0.8fr 1fr 36px', gap: 0, padding: '12px 18px',
               borderBottom: idx < filtered.length - 1 ? '1px solid var(--line)' : 'none', alignItems: 'center', cursor: 'pointer', transition: 'background .12s',
@@ -343,7 +360,7 @@ function ClientsSection({ toast }) {
               <Icon name="chevron" size={15} color="var(--faint)" />
             </div>
           ))}
-          {filtered.length === 0 && (
+          {!loading && filtered.length === 0 && (
             <div style={{ padding: '50px 0', textAlign: 'center', color: 'var(--faint)' }}>
               <Icon name="search" size={32} color="var(--line-2)" stroke={1.5} />
               <div style={{ fontFamily: 'var(--font-cond)', fontSize: 14, marginTop: 10 }}>Nessun cliente per questo filtro</div>
@@ -353,8 +370,8 @@ function ClientsSection({ toast }) {
         </div>
       </Panel>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, fontSize: 12, color: 'var(--faint)', fontFamily: 'var(--font-cond)' }}>
-        <span>{filtered.length} di {CLIENTS.length} clienti</span>
-        <span>248 attivi · 9 in scadenza · 6 certificati da sistemare</span>
+        <span>{filtered.length} di {clients.length} clienti</span>
+        <span>{clients.filter(c=>c.status==='active').length} attivi · {clients.filter(c=>c.status==='expiring').length} in scadenza · {clients.filter(c=>c.cert!=='valid').length} certificati da sistemare</span>
       </div>
 
       {sel && <ClientDrawer client={sel} onClose={() => setSel(null)} toast={toast} />}

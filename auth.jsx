@@ -16,11 +16,49 @@ const AUTH={
   async clientLogin(email,pwd){const sb=await getSB();const{data,error}=await sb.auth.signInWithPassword({email:email.trim(),password:pwd});if(error)return{ok:false,err:'Credenziali non valide'};localStorage.setItem('isg_client_session',data.user.email);return{ok:true};},
   async currentClient(){
     const sb=await getSB();
-    const{data}=await sb.auth.getUser();
-    if(!data.user)return null;
-    const email=data.user.email||'';
+    const{data:auth}=await sb.auth.getUser();
+    if(!auth.user)return null;
+    const email=auth.user.email||'';
+    const uid=auth.user.id;
+    try{
+      const{data:p,error}=await sb.from('profiles')
+        .select('*, memberships(*, subscription_plans(*)), medical_certificates(*)')
+        .eq('id',uid).maybeSingle();
+      if(!error&&p){
+        const mem=(p.memberships||[])[0]||null;
+        const cert=(p.medical_certificates||[])[0]||null;
+        const now=new Date();
+        let expiry='—',expiryDays=0,plan='Nessun abbonamento',planPeriod='—';
+        if(mem){
+          expiry=mem.data_fine||mem.end_date||'—';
+          if(expiry!=='—'){const d=new Date(expiry);expiryDays=Math.ceil((d-now)/86400000);}
+          const sp=Array.isArray(mem.subscription_plans)?mem.subscription_plans[0]:mem.subscription_plans;
+          plan=sp?(sp.nome||sp.name||'Abbonamento'):'Abbonamento attivo';
+          planPeriod=sp?(sp.periodo||sp.period||'—'):'—';
+        }
+        let certStatus='missing',certExp='—',certDays=0;
+        if(cert){
+          certStatus=cert.stato||cert.status||'missing';
+          certExp=cert.data_scadenza||cert.expiry_date||'—';
+          if(certExp!=='—'){const d=new Date(certExp);certDays=Math.ceil((d-now)/86400000);}
+        }
+        const name=[(p.nome||p.first_name||''),(p.cognome||p.last_name||'')].filter(Boolean).join(' ')||email.split('@')[0]||'Atleta';
+        return{
+          email,name,
+          first:p.nome||p.first_name||name,
+          nick:p.nickname||p.nick||name,
+          id:p.id,
+          plan,planPeriod,expiry,expiryDays,
+          cert:certStatus,certExp,certDays,
+          credit:Number(p.credito_distributori||p.credit||0),
+          access:Number(p.accessi_totali||p.total_access||0),
+          consents:p.consensi||p.consents||{chat:false,privacy:true,marketing:false,data:true},
+          isNew:false
+        };
+      }
+    }catch(e){console.warn('profiles query failed',e);}
     const namePart=email.split('@')[0]||'Atleta';
-    return{email,name:namePart,first:namePart,nick:namePart,id:'ISG-2026-0001',plan:'Nessun abbonamento',planPeriod:'—',expiry:'—',expiryDays:0,cert:'missing',certExp:'—',certDays:0,credit:0,access:0,consents:{chat:false,privacy:true,marketing:false,data:true},isNew:true};
+    return{email,name:namePart,first:namePart,nick:namePart,id:uid,plan:'Nessun abbonamento',planPeriod:'—',expiry:'—',expiryDays:0,cert:'missing',certExp:'—',certDays:0,credit:0,access:0,consents:{chat:false,privacy:true,marketing:false,data:true},isNew:true};
   },
   async clientLogout(){const sb=await getSB();await sb.auth.signOut();localStorage.removeItem('isg_client_session');}
 };
